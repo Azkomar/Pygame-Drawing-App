@@ -26,8 +26,6 @@ class MenuPage:
                     self.game.gridValue = 10
                     self.game.current_page = self.game.pages["draw"]
                     self.game.pages["draw"].on_enter()
-    def update(self):
-        pass
 
     def draw(self):
         self.screen.fill("white")

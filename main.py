@@ -24,7 +24,6 @@ class Game:
                     self.running = False
 
             self.current_page.handle_events(events)
-            self.current_page.update()
             self.current_page.draw()
             self.clock.tick(120)
 

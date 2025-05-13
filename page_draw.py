@@ -10,14 +10,20 @@ class DrawPage:
         self.w = w
         self.h = h
         self.listRect = []
+        self.listColor = []
+        self.index = 0
+        self.saveImage = pygame.image.load("./diskette.png")
 
         #Back Button
         self.menuWidth = w/8
         self.menuHeight = h/10
         self.backButton = pygame.Rect(0, 0, self.menuWidth, self.menuHeight)
-        self.btn_color = 'black'
+        self.btn_color = 'white'
+        self.textColor = 'black'
         self.font = pygame.font.SysFont('Arial', 35)
-        self.text = self.font.render('Retour', True, 'white')
+
+        #Border
+        self.border = pygame.Rect(0, 0, self.menuWidth, self.menuHeight)
 
         #Grid
         self.grid = pygame.Rect(self.menuWidth, 0, w-self.menuWidth, h)
@@ -26,12 +32,6 @@ class DrawPage:
         #Color selection
         self.blockSize = self.menuWidth/2
         self.selected_color = 'blue'
-        self.custom_color_btn = pygame.Rect(0, self.menuHeight, self.menuWidth, self.menuHeight)
-        self.custom_color_txt = self.font.render("Choose Color", True, "white")
-
-        #Clear Canva
-        self.clearBtn = pygame.Rect(0, 2*self.menuHeight, self.menuWidth, self.menuHeight)
-        self.clearBtnTxt = self.font.render("Clear", True, "white")
 
 
     def on_enter(self):
@@ -49,6 +49,31 @@ class DrawPage:
         # Récupère la couleur hex (ex: '#ff0000') si valide
         if color_code[1] is not None:
             self.selected_color = color_code[1]  # Hex string compatible avec pygame
+            self.colorSquarePos()
+
+    def colorSquarePos(self):
+        # Calcule la position pour l'affichage dans la palette
+        # Taille d'une cellule de la palette
+        cell_size = self.blockSize
+
+        # Nombre de cellules verticales max
+        max_rows = int((self.h - 4 * self.menuHeight) // cell_size)
+
+        # Calcul position en colonne et ligne
+        row = self.index % max_rows
+        col = (self.index // max_rows) % 2
+
+        x = col * cell_size
+        y = int(4 * self.menuHeight + row * cell_size)
+
+        color_rect = pygame.Rect(x, y, self.blockSize, self.blockSize)
+
+        self.listColor.append({
+            "color": self.selected_color,
+            "rect": color_rect
+        })
+
+        self.index += 1
 
 
     def handle_events(self, events):
@@ -56,7 +81,7 @@ class DrawPage:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if self.backButton.collidepoint(pygame.mouse.get_pos()):
                     self.game.current_page = self.game.pages["menu"]
-                elif self.custom_color_btn.collidepoint(pygame.mouse.get_pos()):
+                elif self.customColorBtn.collidepoint(pygame.mouse.get_pos()):
                     self.choose_custom_color()
                 elif self.clearBtn.collidepoint(pygame.mouse.get_pos()):
                     self.on_enter()
@@ -67,31 +92,61 @@ class DrawPage:
             for cell in self.listRect:
                 if cell["rect"].collidepoint(mouse_pos):
                     cell["color"] = self.selected_color
-            
 
-    def update(self):
-        pass
+            for color in self.listColor:
+                if color["rect"].collidepoint(mouse_pos):
+                    self.selected_color = color["color"]
+                    s = pygame.Surface((self.blockSize, self.blockSize))  # the size of your rect
+                    s.set_alpha(128)                # alpha level
+                    s.fill((255,255,255))           # this fills the entire surface
+                    self.screen.blit(s, (color["rect"].x, color["rect"].y))
+                    pygame.display.update()
+                    break
 
     def draw(self):
-        self.screen.fill("white")
+        self.screen.fill("black")
+
+        #Draw first button to go back to the menu
+        self.btnText = 'Back'
+        self.text = self.font.render(self.btnText, True, self.textColor)
         pygame.draw.rect(self.screen, self.btn_color, self.backButton)
+        pygame.draw.rect(self.screen, self.textColor, self.border, 1)
         text_rect = self.text.get_rect(center=self.backButton.center)
         self.screen.blit(self.text, text_rect)
-        
-        #for i in range(2):
-        #   for j in range(int(self.menuHeight), self.h, int(self.blockSize)):
-        #       rect = pygame.Rect(i*self.blockSize, j, self.blockSize, self.blockSize)
-         #       pygame.draw.rect(self.screen, 'red', rect, 1)
 
+        #Call the function to see the cursor and color the cell
         self.drawGridHover()
 
-        pygame.draw.rect(self.screen, self.btn_color, self.custom_color_btn)
-        text_rect = self.custom_color_txt.get_rect(center=self.custom_color_btn.center)
-        self.screen.blit(self.custom_color_txt, text_rect)
+        #Draw second button to oppen color wheel from tkinter
+        self.btnText = "Choose Color"
+        self.text = self.font.render(self.btnText, True, self.textColor)
+        self.customColorBtn = self.backButton.move(0, self.menuHeight)
+        pygame.draw.rect(self.screen, self.btn_color, self.customColorBtn)
+        newBorder = self.border.move(0, self.menuHeight)
+        pygame.draw.rect(self.screen, self.textColor, newBorder, 1)
+        text_rect = self.text.get_rect(center=self.customColorBtn.center)
+        self.screen.blit(self.text, text_rect)
 
+        #Draw third button that clear the canva by calling the on_enter method
+        self.btnText = "Clear"
+        self.text = self.font.render(self.btnText, True, self.textColor)
+        self.clearBtn = self.customColorBtn.move(0, self.menuHeight)
         pygame.draw.rect(self.screen, self.btn_color, self.clearBtn)
-        text_rect = self.clearBtnTxt.get_rect(center=self.clearBtn.center)
-        self.screen.blit(self.clearBtnTxt, text_rect)
+        newBorder = newBorder.move(0, self.menuHeight)
+        pygame.draw.rect(self.screen, self.textColor, newBorder, 1)
+        text_rect = self.text.get_rect(center=self.clearBtn.center)
+        self.screen.blit(self.text, text_rect)
+
+        self.saveBtn = self.clearBtn.move(0, self.menuHeight)
+        pygame.draw.rect(self.screen, self.btn_color, self.saveBtn)
+        newBorder = newBorder.move(0, self.menuHeight)
+        pygame.draw.rect(self.screen, self.textColor, newBorder, 1)
+        text_rect = self.saveImage.get_rect(center=self.saveBtn.center)
+        self.screen.blit(self.saveImage, text_rect)
+
+        for colorNewBtn in self.listColor:
+            pygame.draw.rect(self.screen, colorNewBtn["color"], colorNewBtn["rect"])
+            pygame.draw.rect(self.screen, self.textColor, colorNewBtn["rect"], 1)
 
         pygame.display.flip()
     
