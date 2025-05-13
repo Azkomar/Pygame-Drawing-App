@@ -30,7 +30,7 @@ class Game:
 
 if __name__ == "__main__":
     pygame.init()
-    screen = pygame.display.set_mode((1200, 800))
+    screen = pygame.display.set_mode((1600, 1000))
     game = Game(screen)
     game.run()
     pygame.quit()

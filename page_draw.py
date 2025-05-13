@@ -1,4 +1,6 @@
 import pygame
+import tkinter as tk
+from tkinter import colorchooser
 
 class DrawPage:
     def __init__(self, game):
@@ -10,31 +12,54 @@ class DrawPage:
         self.listRect = []
 
         #Back Button
-        self.btnWidth = w/8
-        self.btnHeight = h/10
-        self.button = pygame.Rect(0, 0, self.btnWidth, self.btnHeight)
+        self.menuWidth = w/8
+        self.menuHeight = h/10
+        self.button = pygame.Rect(0, 0, self.menuWidth, self.menuHeight)
         self.btn_color = 'black'
         self.font = pygame.font.SysFont('Arial', 35)
         self.text = self.font.render('Retour', True, 'white')
 
         #Grid
-        self.grid = pygame.Rect(self.btnWidth, 0, w-self.btnWidth, h)
+        self.grid = pygame.Rect(self.menuWidth, 0, w-self.menuWidth, h)
         self.gridBaseColor = 'gray'
+
+        #Color selection
+        self.blockSize = self.menuWidth/2
+        self.selected_color = 'blue'
+        self.custom_color_btn = pygame.Rect(0, self.menuHeight, self.menuWidth, self.menuHeight)
+        self.custom_color_txt = self.font.render("Choose Color", True, "white")
 
     def on_enter(self):
         # Appelée quand on arrive sur la page
         self.drawGrid(self.game.gridValue)
+
+    def choose_custom_color(self):
+        # Crée une fenêtre Tkinter (cachée)
+        root = tk.Tk()
+        root.withdraw()
+
+        # Ouvre la palette système
+        color_code = colorchooser.askcolor(title="Choisir une couleur")
+
+        # Récupère la couleur hex (ex: '#ff0000') si valide
+        if color_code[1] is not None:
+            self.selected_color = color_code[1]  # Hex string compatible avec pygame
 
     def handle_events(self, events):
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if self.button.collidepoint(pygame.mouse.get_pos()):
                     self.game.current_page = self.game.pages["menu"]
-                else:
-                    mouse_pos = pygame.mouse.get_pos()
-                    for cell in self.listRect:
-                        if cell["rect"].collidepoint(mouse_pos):
-                            cell["color"] = "blue"
+                elif self.custom_color_btn.collidepoint(pygame.mouse.get_pos()):
+                    self.choose_custom_color()
+                    
+
+        if pygame.mouse.get_pressed(3)[0] is True:
+            mouse_pos = pygame.mouse.get_pos()
+            for cell in self.listRect:
+                if cell["rect"].collidepoint(mouse_pos):
+                    cell["color"] = self.selected_color
+            
 
     def update(self):
         pass
@@ -44,7 +69,18 @@ class DrawPage:
         pygame.draw.rect(self.screen, self.btn_color, self.button)
         text_rect = self.text.get_rect(center=self.button.center)
         self.screen.blit(self.text, text_rect)
+        
+        #for i in range(2):
+        #   for j in range(int(self.menuHeight), self.h, int(self.blockSize)):
+        #       rect = pygame.Rect(i*self.blockSize, j, self.blockSize, self.blockSize)
+         #       pygame.draw.rect(self.screen, 'red', rect, 1)
+
         self.drawGridHover()
+
+        pygame.draw.rect(self.screen, "gray", self.custom_color_btn)
+        text_rect = self.custom_color_txt.get_rect(center=self.custom_color_btn.center)
+        self.screen.blit(self.custom_color_txt, text_rect)
+
         pygame.display.flip()
     
     def drawGrid(self, size):
