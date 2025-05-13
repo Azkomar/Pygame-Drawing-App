@@ -26,7 +26,7 @@ class Game:
             self.current_page.handle_events(events)
             self.current_page.update()
             self.current_page.draw()
-            self.clock.tick(30)
+            self.clock.tick(120)
 
 if __name__ == "__main__":
     pygame.init()

@@ -14,7 +14,7 @@ class DrawPage:
         #Back Button
         self.menuWidth = w/8
         self.menuHeight = h/10
-        self.button = pygame.Rect(0, 0, self.menuWidth, self.menuHeight)
+        self.backButton = pygame.Rect(0, 0, self.menuWidth, self.menuHeight)
         self.btn_color = 'black'
         self.font = pygame.font.SysFont('Arial', 35)
         self.text = self.font.render('Retour', True, 'white')
@@ -28,6 +28,11 @@ class DrawPage:
         self.selected_color = 'blue'
         self.custom_color_btn = pygame.Rect(0, self.menuHeight, self.menuWidth, self.menuHeight)
         self.custom_color_txt = self.font.render("Choose Color", True, "white")
+
+        #Clear Canva
+        self.clearBtn = pygame.Rect(0, 2*self.menuHeight, self.menuWidth, self.menuHeight)
+        self.clearBtnTxt = self.font.render("Clear", True, "white")
+
 
     def on_enter(self):
         # Appelée quand on arrive sur la page
@@ -45,13 +50,16 @@ class DrawPage:
         if color_code[1] is not None:
             self.selected_color = color_code[1]  # Hex string compatible avec pygame
 
+
     def handle_events(self, events):
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.button.collidepoint(pygame.mouse.get_pos()):
+                if self.backButton.collidepoint(pygame.mouse.get_pos()):
                     self.game.current_page = self.game.pages["menu"]
                 elif self.custom_color_btn.collidepoint(pygame.mouse.get_pos()):
                     self.choose_custom_color()
+                elif self.clearBtn.collidepoint(pygame.mouse.get_pos()):
+                    self.on_enter()
                     
 
         if pygame.mouse.get_pressed(3)[0] is True:
@@ -66,8 +74,8 @@ class DrawPage:
 
     def draw(self):
         self.screen.fill("white")
-        pygame.draw.rect(self.screen, self.btn_color, self.button)
-        text_rect = self.text.get_rect(center=self.button.center)
+        pygame.draw.rect(self.screen, self.btn_color, self.backButton)
+        text_rect = self.text.get_rect(center=self.backButton.center)
         self.screen.blit(self.text, text_rect)
         
         #for i in range(2):
@@ -77,9 +85,13 @@ class DrawPage:
 
         self.drawGridHover()
 
-        pygame.draw.rect(self.screen, "gray", self.custom_color_btn)
+        pygame.draw.rect(self.screen, self.btn_color, self.custom_color_btn)
         text_rect = self.custom_color_txt.get_rect(center=self.custom_color_btn.center)
         self.screen.blit(self.custom_color_txt, text_rect)
+
+        pygame.draw.rect(self.screen, self.btn_color, self.clearBtn)
+        text_rect = self.clearBtnTxt.get_rect(center=self.clearBtn.center)
+        self.screen.blit(self.clearBtnTxt, text_rect)
 
         pygame.display.flip()
     
