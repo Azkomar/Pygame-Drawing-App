@@ -3,6 +3,8 @@ import tkinter as tk
 from tkinter import colorchooser
 
 class DrawPage:
+
+##### INIT function #####
     def __init__(self, game):
         self.game = game
         self.screen = game.screen
@@ -12,6 +14,7 @@ class DrawPage:
         self.listColor = []
         self.index = 0
         self.saveImage = pygame.image.load("./diskette.png")
+        self.selected = 0
 
         #Back Button
         self.menuWidth = int(0.5*(self.w-self.gridWall))
@@ -29,29 +32,47 @@ class DrawPage:
         self.gridBaseColor = 'gray'
 
         #Color selection
+        self.colorSquare = pygame.Rect(0, int(4 * self.menuHeight), self.menuWidth, int((self.h - 4 * self.menuHeight)- 1))
         self.blockSizeX = self.menuWidth / 3
         self.selected_color = 'blue'
-
-    def checkResize(self):
-        newW, newH = self.screen.get_width(), self.screen.get_height()
-        if newH != self.h or newW != self.w:
-            self.screenSize()
-
-    def screenSize(self):
-        self.w, self.h = self.screen.get_width(), self.screen.get_height()
-        self.menuWidth = int(0.5*(self.w-self.gridWall))
-        self.menuHeight = self.h/10
-        self.gridWall = int(0.9*self.h)
-        self.backButton = pygame.Rect(0, 0, self.menuWidth, self.menuHeight)
-        self.border = pygame.Rect(0, 0, self.menuWidth, self.menuHeight)
-        self.grid = pygame.Rect(self.menuWidth, 0, self.gridWall, self.gridWall)
-        self.blockSizeX = self.menuWidth / 3
-        self.drawGrid(self.game.gridValue)
 
     def on_enter(self):
         # Appelée quand on arrive sur la page
         self.drawGrid(self.game.gridValue)
 
+##### RESIZE screen function #####
+    def checkResize(self):
+        newW, newH = self.screen.get_width(), self.screen.get_height()
+        if newH != self.h or newW != self.w:
+            scaleY = newH/self.h
+            scaleX = newW/self.w
+            self.screenSize()
+            self.resizeColorBlock(scaleX, scaleY)
+
+    def screenSize(self):
+        self.w, self.h = self.screen.get_width(), self.screen.get_height()
+        self.menuWidth = round(0.5*(self.w-self.gridWall))
+        self.menuHeight = round(self.h/10)
+        self.gridWall = round(0.9*self.h)
+
+        self.backButton = pygame.Rect(0, 0, self.menuWidth, self.menuHeight)
+        self.border = pygame.Rect(0, 0, self.menuWidth, self.menuHeight)
+        self.grid = pygame.Rect(self.menuWidth, 0, self.gridWall, self.gridWall)
+        self.blockSizeX = self.menuWidth / 3
+        self.colorSquare = pygame.Rect(0, 4 * self.menuHeight, self.menuWidth, (self.h - 4 * self.menuHeight)- 1)
+        self.selected = 0
+        self.drawGrid(self.game.gridValue)
+
+    def resizeColorBlock(self, scaleX, scaleY):
+        for rectColor in self.listColor:
+            x = round(scaleX * rectColor["pos"][0])
+            y =  round(scaleY * rectColor["pos"][1])
+            rectColor["rect"].update(x, y, self.blockSizeX, self.menuHeight)
+            rectColor["pos"][0] = x
+            rectColor["pos"][1] = y
+
+
+##### COLOR Tkinter function #####
     def choose_custom_color(self):
         # Crée une fenêtre Tkinter (cachée)
         root = tk.Tk()
@@ -80,40 +101,44 @@ class DrawPage:
         color_rect = pygame.Rect(x, y, self.blockSizeX, self.menuHeight)
 
         self.listColor.append({
+            "pos": [x, y],
             "color": self.selected_color,
             "rect": color_rect
         })
 
         self.index += 1
 
-
+##### EVENT function #####
     def handle_events(self, events):
+        mouse_pos = pygame.mouse.get_pos()
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.backButton.collidepoint(pygame.mouse.get_pos()):
+                if self.backButton.collidepoint(mouse_pos):
                     self.game.current_page = self.game.pages["menu"]
-                elif self.customColorBtn.collidepoint(pygame.mouse.get_pos()):
+                elif self.customColorBtn.collidepoint(mouse_pos):
                     self.choose_custom_color()
-                elif self.clearBtn.collidepoint(pygame.mouse.get_pos()):
+                elif self.clearBtn.collidepoint(mouse_pos):
                     self.on_enter()
-                    
+                elif self.colorSquare.collidepoint(mouse_pos):
+                    self.chooseSquareEffect(mouse_pos)
 
         if pygame.mouse.get_pressed(3)[0] is True:
-            mouse_pos = pygame.mouse.get_pos()
-            for cell in self.listRect:
+            if self.grid.collidepoint(mouse_pos):
+                self.colorGrid(mouse_pos)
+    
+    def colorGrid(self, mouse_pos):
+        for cell in self.listRect:
                 if cell["rect"].collidepoint(mouse_pos):
                     cell["color"] = self.selected_color
 
-            for color in self.listColor:
-                if color["rect"].collidepoint(mouse_pos):
-                    self.selected_color = color["color"]
-                    s = pygame.Surface((self.blockSizeX, self.menuHeight))  # the size of your rect
-                    s.set_alpha(128)                # alpha level
-                    s.fill((255,255,255))           # this fills the entire surface
-                    self.screen.blit(s, (color["rect"].x, color["rect"].y))
-                    pygame.display.update()
-                    break
+    def chooseSquareEffect(self, mouse_pos):
+        for color in self.listColor:
+            if color["rect"].collidepoint(mouse_pos):
+                self.selected_color = color["color"]
+                self.selected = pygame.Rect(color["rect"].x, color["rect"].y, self.blockSizeX, self.menuHeight)
+                break
 
+##### DRAW function #####
     def draw(self):
         self.screen.fill("black")
 
@@ -157,9 +182,12 @@ class DrawPage:
 
         for colorNewBtn in self.listColor:
             pygame.draw.rect(self.screen, colorNewBtn["color"], colorNewBtn["rect"])
+        if self.selected != 0:
+            pygame.draw.rect(self.screen, 'red', self.selected, 3)
 
         pygame.display.flip()
-    
+
+##### GRID Interaction function #####
     def drawGrid(self, size):
         self.listRect.clear()
         for x in range(self.grid.left, int(self.grid.left + self.gridWall), size):
