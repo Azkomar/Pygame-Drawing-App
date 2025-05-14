@@ -9,13 +9,14 @@ class DrawPage:
         w, h = self.screen.get_width(), self.screen.get_height()
         self.w = w
         self.h = h
+        self.gridWall = int(0.9*h)
         self.listRect = []
         self.listColor = []
         self.index = 0
         self.saveImage = pygame.image.load("./diskette.png")
 
         #Back Button
-        self.menuWidth = w/8
+        self.menuWidth = int(0.5*(w-self.gridWall))
         self.menuHeight = h/10
         self.backButton = pygame.Rect(0, 0, self.menuWidth, self.menuHeight)
         self.btn_color = 'white'
@@ -26,11 +27,11 @@ class DrawPage:
         self.border = pygame.Rect(0, 0, self.menuWidth, self.menuHeight)
 
         #Grid
-        self.grid = pygame.Rect(self.menuWidth, 0, w-self.menuWidth, h)
+        self.grid = pygame.Rect(self.menuWidth, 0, self.gridWall, self.gridWall)
         self.gridBaseColor = 'gray'
 
         #Color selection
-        self.blockSize = self.menuWidth/2
+        self.blockSizeX = self.menuWidth / 3
         self.selected_color = 'blue'
 
 
@@ -53,20 +54,17 @@ class DrawPage:
 
     def colorSquarePos(self):
         # Calcule la position pour l'affichage dans la palette
-        # Taille d'une cellule de la palette
-        cell_size = self.blockSize
-
         # Nombre de cellules verticales max
-        max_rows = int((self.h - 4 * self.menuHeight) // cell_size)
+        max_rows = int((self.h - 4 * self.menuHeight) // self.menuHeight) - 1
 
         # Calcul position en colonne et ligne
         row = self.index % max_rows
-        col = (self.index // max_rows) % 2
+        col = (self.index // max_rows) % 3
 
-        x = col * cell_size
-        y = int(4 * self.menuHeight + row * cell_size)
+        x = col * self.blockSizeX
+        y = int(4 * self.menuHeight + row * self.menuHeight)
 
-        color_rect = pygame.Rect(x, y, self.blockSize, self.blockSize)
+        color_rect = pygame.Rect(x, y, self.blockSizeX, self.menuHeight)
 
         self.listColor.append({
             "color": self.selected_color,
@@ -96,7 +94,7 @@ class DrawPage:
             for color in self.listColor:
                 if color["rect"].collidepoint(mouse_pos):
                     self.selected_color = color["color"]
-                    s = pygame.Surface((self.blockSize, self.blockSize))  # the size of your rect
+                    s = pygame.Surface((self.blockSizeX, self.menuHeight))  # the size of your rect
                     s.set_alpha(128)                # alpha level
                     s.fill((255,255,255))           # this fills the entire surface
                     self.screen.blit(s, (color["rect"].x, color["rect"].y))
@@ -146,17 +144,14 @@ class DrawPage:
 
         for colorNewBtn in self.listColor:
             pygame.draw.rect(self.screen, colorNewBtn["color"], colorNewBtn["rect"])
-            pygame.draw.rect(self.screen, self.textColor, colorNewBtn["rect"], 1)
 
         pygame.display.flip()
     
     def drawGrid(self, size):
         self.listRect.clear()
-        pygame.draw.rect(self.screen, self.btn_color, self.grid, 1)
-        for x in range(self.grid.left, int(self.w-self.w/8), size):
-            for y in range(0, self.h, size):
+        for x in range(self.grid.left, int(self.grid.left + self.gridWall), size):
+            for y in range(0, self.gridWall, size):
                 rect = pygame.Rect(x, y, size, size)
-                pygame.draw.rect(self.screen, self.gridBaseColor, rect, 1)
                 self.listRect.append({"rect": rect, "color": "white"})
 
     def drawGridHover(self):
