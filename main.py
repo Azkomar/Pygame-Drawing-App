@@ -24,12 +24,13 @@ class Game:
                     self.running = False
 
             self.current_page.handle_events(events)
+            self.current_page.checkResize()
             self.current_page.draw()
             self.clock.tick(120)
 
 if __name__ == "__main__":
     pygame.init()
-    screen = pygame.display.set_mode((1600, 1000))
+    screen = pygame.display.set_mode((1600, 1000), pygame.RESIZABLE)
     game = Game(screen)
     game.run()
     pygame.quit()

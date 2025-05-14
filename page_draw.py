@@ -6,18 +6,16 @@ class DrawPage:
     def __init__(self, game):
         self.game = game
         self.screen = game.screen
-        w, h = self.screen.get_width(), self.screen.get_height()
-        self.w = w
-        self.h = h
-        self.gridWall = int(0.9*h)
+        self.w, self.h = self.screen.get_width(), self.screen.get_height()
+        self.gridWall = int(0.9*self.h)
         self.listRect = []
         self.listColor = []
         self.index = 0
         self.saveImage = pygame.image.load("./diskette.png")
 
         #Back Button
-        self.menuWidth = int(0.5*(w-self.gridWall))
-        self.menuHeight = h/10
+        self.menuWidth = int(0.5*(self.w-self.gridWall))
+        self.menuHeight = self.h/10
         self.backButton = pygame.Rect(0, 0, self.menuWidth, self.menuHeight)
         self.btn_color = 'white'
         self.textColor = 'black'
@@ -34,6 +32,21 @@ class DrawPage:
         self.blockSizeX = self.menuWidth / 3
         self.selected_color = 'blue'
 
+    def checkResize(self):
+        newW, newH = self.screen.get_width(), self.screen.get_height()
+        if newH != self.h or newW != self.w:
+            self.screenSize()
+
+    def screenSize(self):
+        self.w, self.h = self.screen.get_width(), self.screen.get_height()
+        self.menuWidth = int(0.5*(self.w-self.gridWall))
+        self.menuHeight = self.h/10
+        self.gridWall = int(0.9*self.h)
+        self.backButton = pygame.Rect(0, 0, self.menuWidth, self.menuHeight)
+        self.border = pygame.Rect(0, 0, self.menuWidth, self.menuHeight)
+        self.grid = pygame.Rect(self.menuWidth, 0, self.gridWall, self.gridWall)
+        self.blockSizeX = self.menuWidth / 3
+        self.drawGrid(self.game.gridValue)
 
     def on_enter(self):
         # Appelée quand on arrive sur la page
