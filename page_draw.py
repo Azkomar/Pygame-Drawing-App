@@ -9,7 +9,7 @@ class DrawPage:
         self.game = game
         self.screen = game.screen
         self.w, self.h = self.screen.get_width(), self.screen.get_height()
-        self.gridWall = int(0.9*self.h)
+        self.gridWall = int(0.95*self.h)
         self.listRect = []
         self.listColor = []
         self.index = 0
@@ -51,9 +51,9 @@ class DrawPage:
 
     def screenSize(self):
         self.w, self.h = self.screen.get_width(), self.screen.get_height()
+        self.gridWall = round(0.95*self.h)
         self.menuWidth = round(0.5*(self.w-self.gridWall))
         self.menuHeight = round(self.h/10)
-        self.gridWall = round(0.9*self.h)
 
         self.backButton = pygame.Rect(0, 0, self.menuWidth, self.menuHeight)
         self.border = pygame.Rect(0, 0, self.menuWidth, self.menuHeight)
@@ -153,32 +153,7 @@ class DrawPage:
         #Call the function to see the cursor and color the cell
         self.drawGridHover()
 
-        #Draw second button to oppen color wheel from tkinter
-        self.btnText = "Choose Color"
-        self.text = self.font.render(self.btnText, True, self.textColor)
-        self.customColorBtn = self.backButton.move(0, self.menuHeight)
-        pygame.draw.rect(self.screen, self.btn_color, self.customColorBtn)
-        newBorder = self.border.move(0, self.menuHeight)
-        pygame.draw.rect(self.screen, self.textColor, newBorder, 1)
-        text_rect = self.text.get_rect(center=self.customColorBtn.center)
-        self.screen.blit(self.text, text_rect)
-
-        #Draw third button that clear the canva by calling the on_enter method
-        self.btnText = "Clear"
-        self.text = self.font.render(self.btnText, True, self.textColor)
-        self.clearBtn = self.customColorBtn.move(0, self.menuHeight)
-        pygame.draw.rect(self.screen, self.btn_color, self.clearBtn)
-        newBorder = newBorder.move(0, self.menuHeight)
-        pygame.draw.rect(self.screen, self.textColor, newBorder, 1)
-        text_rect = self.text.get_rect(center=self.clearBtn.center)
-        self.screen.blit(self.text, text_rect)
-
-        self.saveBtn = self.clearBtn.move(0, self.menuHeight)
-        pygame.draw.rect(self.screen, self.btn_color, self.saveBtn)
-        newBorder = newBorder.move(0, self.menuHeight)
-        pygame.draw.rect(self.screen, self.textColor, newBorder, 1)
-        text_rect = self.saveImage.get_rect(center=self.saveBtn.center)
-        self.screen.blit(self.saveImage, text_rect)
+        self.drawButtons()
 
         for colorNewBtn in self.listColor:
             pygame.draw.rect(self.screen, colorNewBtn["color"], colorNewBtn["rect"])
@@ -187,11 +162,44 @@ class DrawPage:
 
         pygame.display.flip()
 
+    def drawButtons(self):
+        button_labels = ["Choose Color", "Clear", "Save"]
+        current_rect = self.backButton
+        current_border = self.border
+
+        for label in button_labels:
+            # Déplacement vertical pour positionner le bouton
+            current_rect = current_rect.move(0, self.menuHeight)
+            current_border = current_border.move(0, self.menuHeight)
+
+            # Rendu du texte
+            self.text = self.font.render(label, True, self.textColor)
+
+            # Dessin du bouton
+            pygame.draw.rect(self.screen, self.btn_color, current_rect)
+            pygame.draw.rect(self.screen, self.textColor, current_border, 1)
+
+            # Placement du texte centré sur le bouton
+            text_rect = self.text.get_rect(center=current_rect.center)
+            self.screen.blit(self.text, text_rect)
+
+            # Sauvegarde des boutons pour usage ultérieur
+            if label == "Choose Color":
+                self.customColorBtn = current_rect
+            elif label == "Clear":
+                self.clearBtn = current_rect
+            elif label == "Save":
+                self.saveBtn = current_rect
+
 ##### GRID Interaction function #####
-    def drawGrid(self, size):
+    def drawGrid(self, maxIteration):
         self.listRect.clear()
-        for x in range(self.grid.left, int(self.grid.left + self.gridWall), size):
-            for y in range(0, self.gridWall, size):
+        size = int(self.gridWall / maxIteration)
+
+        for i in range(maxIteration):
+            x = self.grid.left + i * size
+            for j in range(maxIteration):
+                y = j * size
                 rect = pygame.Rect(x, y, size, size)
                 self.listRect.append({"rect": rect, "color": "white"})
 
