@@ -34,7 +34,11 @@ class DrawPage:
         #Color selection
         self.colorSquare = pygame.Rect(0, int(4 * self.menuHeight), self.menuWidth, int((self.h - 4 * self.menuHeight)- 1))
         self.blockSizeX = self.menuWidth / 3
-        self.selected_color = 'blue'
+        self.selected_color = 'white'
+
+        #OffSet buttons
+        self.offset = -1
+        self.plusBtn = pygame.Rect(self.grid.right, 0, int(self.menuWidth/2), self.menuHeight)
 
     def on_enter(self):
         # Appelée quand on arrive sur la page
@@ -123,15 +127,34 @@ class DrawPage:
                     self.chooseSquareEffect(mouse_pos)
                 elif self.saveBtn.collidepoint(mouse_pos):
                     self.saveDraw()
+                elif self.plusBtn.collidepoint(mouse_pos):
+                    self.offset +=1
 
         if pygame.mouse.get_pressed(3)[0] is True:
             if self.grid.collidepoint(mouse_pos):
                 self.colorGrid(mouse_pos)
     
     def colorGrid(self, mouse_pos):
-        for cell in self.listRect:
+        cols = rows = self.game.gridValue
+        for i, cell in enumerate(self.listRect):
                 if cell["rect"].collidepoint(mouse_pos):
-                    cell["color"] = self.selected_color
+                    # Coordonnées de la case dans la grille
+                    col = i % cols
+                    row = i // cols
+                    if self.offset >= 0:
+                    # Parcours du carré x*x
+                        for dy in range(-self.offset + (-1), self.offset + 2):
+                            for dx in range(-self.offset + (-1), self.offset + 2):
+                                new_col = col + dx
+                                new_row = row + dy
+
+                                if 0 <= new_col < cols and 0 <= new_row < rows:
+                                    index = new_row * cols + new_col
+                                    self.listRect[index]["color"] = self.selected_color
+                        break
+                    else:
+                        cell["color"] = self.selected_color
+                    
 
     def chooseSquareEffect(self, mouse_pos):
         for color in self.listColor:
@@ -162,15 +185,15 @@ class DrawPage:
         text_rect = self.text.get_rect(center=self.backButton.center)
         self.screen.blit(self.text, text_rect)
 
-        #Call the function to see the cursor and color the cell
         self.drawGridHover()
-
         self.drawButtons()
 
         for colorNewBtn in self.listColor:
             pygame.draw.rect(self.screen, colorNewBtn["color"], colorNewBtn["rect"])
         if self.selected != 0:
             pygame.draw.rect(self.screen, 'red', self.selected, 3)
+
+        pygame.draw.rect(self.screen, self.btn_color, self.plusBtn)
 
         pygame.display.flip()
 
