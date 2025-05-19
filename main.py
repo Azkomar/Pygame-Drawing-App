@@ -1,6 +1,7 @@
 import pygame
 from page_menu import MenuPage
 from page_draw import DrawPage
+from page_save import SavePage
 
 class Game:
     def __init__(self, screen):
@@ -8,11 +9,14 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         self.gridValue = 0
+        self.pixelArt = 0
+        self.gridSize = 0
 
         # Pages
         self.pages = {
             "menu": MenuPage(self),
-            "draw": DrawPage(self)
+            "draw": DrawPage(self),
+            "save": SavePage(self)
         }
         self.current_page = self.pages["menu"]
         
